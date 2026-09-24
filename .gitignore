@@ -5,3 +5,5 @@ vm.pid
 .venv/
 __pycache__/
 qemu.log
+openbot_key
+openbot_key.pub

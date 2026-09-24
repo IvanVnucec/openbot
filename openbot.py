@@ -65,12 +65,23 @@ def stop_vm():
         qemu_proc.wait()
     return 'VM stopped.'
 
+SSH_CMD = [
+    'ssh', '-p', '2222', '-i', 'openbot_key',
+    '-o', 'StrictHostKeyChecking=no',
+    '-o', 'UserKnownHostsFile=/dev/null',
+    '-o', 'BatchMode=yes',
+    '-o', 'LogLevel=ERROR',
+    'alpine@127.0.0.1',
+]
+
 def run_command(command):
     try:
-        proc = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+        proc = subprocess.run(SSH_CMD + [command], capture_output=True, text=True, timeout=30)
     except subprocess.TimeoutExpired:
         raise Exception('timed out after 30s')
     output = (proc.stdout + proc.stderr).strip() or '(no output)'
+    if proc.returncode == 255:
+        return f'Error: ssh failed (VM not running?): {output}'
     return f'exit={proc.returncode}\n{output}'
 
 TOOLS = [
@@ -84,15 +95,26 @@ TOOLS = [
         'description': 'Stop the OpenBot virtual machine.',
         'parameters': {'type': 'object', 'properties': {}},
     }},
+    {'type': 'function', 'function': {
+        'name': 'run',
+        'description': 'Execute a shell command in the VM.',
+        'parameters': {
+            'type': 'object',
+            'properties': {'command': {'type': 'string', 'description': 'Shell command to execute'}},
+            'required': ['command'],
+        },
+    }},
 ]
 
 HANDLERS = {
     'start': start_vm,
     'stop': stop_vm,
+    'run': run_command,
 }
 
 SYSTEM = '''You are OpenBot: agent that has control over the Virtual Machine (VM).
-Use the start and stop tools to manage the VM.'''
+Use the start and stop tools to manage the VM.
+Use the run tool to execute shell commands in the VM.'''
 
 messages = [
     {'role': 'system', 'content': SYSTEM},

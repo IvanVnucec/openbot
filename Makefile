@@ -1,7 +1,14 @@
+all: setup
+
+setup: openbot.qcow2
+
 alpine-virt-3.24.2-x86_64.iso:
 	wget https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-virt-3.24.2-x86_64.iso
 
-openbot.qcow2: alpine-virt-3.24.2-x86_64.iso
+openbot_key:
+	ssh-keygen -t ed25519 -f openbot_key -N '' -C openbot
+
+openbot.qcow2: alpine-virt-3.24.2-x86_64.iso openbot_key
 	sudo ./alpine-make-vm-image.sh \
 		--branch v3.24 \
 		--image-format qcow2 \
@@ -27,4 +34,4 @@ boot: openbot.qcow2
 		-device virtio-tablet-pci
 
 clean:
-	rm -f openbot.qcow2
+	rm -f openbot.qcow2 openbot_key openbot_key.pub

@@ -23,6 +23,10 @@ addgroup alpine audio
 addgroup alpine netdev
 echo 'alpine ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/alpine
 
+# ssh access for openbot
+install -d -m 700 -o alpine -g alpine /home/alpine/.ssh
+install -m 600 -o alpine -g alpine /mnt/openbot_key.pub /home/alpine/.ssh/authorized_keys
+
 cat > /etc/network/interfaces <<'EOF'
 auto lo
 iface lo inet loopback

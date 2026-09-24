@@ -1,2 +1,7 @@
 alpine-virt-3.24.2-x86_64.iso
 openbot.qcow2
+vm.log
+vm.pid
+.venv/
+__pycache__/
+qemu.log

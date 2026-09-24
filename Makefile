@@ -12,9 +12,10 @@ openbot.qcow2: alpine-virt-3.24.2-x86_64.iso
 		--script-chroot \
 		openbot.qcow2 \
 		./configure.sh
+	sudo chown ivan openbot.qcow2
 
-run: openbot.qcow2
-	sudo qemu-system-x86_64 \
+boot: openbot.qcow2
+	qemu-system-x86_64 \
 		-machine q35,accel=kvm \
 		-cpu host \
 		-smp 2 \

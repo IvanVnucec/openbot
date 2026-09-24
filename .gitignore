@@ -6,4 +6,6 @@ vm.pid
 __pycache__/
 qemu.log
 openbot_key
+screen.ppm
+screen.png
 openbot_key.pub

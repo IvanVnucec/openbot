@@ -33,17 +33,35 @@ iface lo inet loopback
 
 auto eth0
 iface eth0 inet dhcp
-    hostname ffbox
+    hostname openbot
 EOF
 
-echo ffbox > /etc/hostname
+echo openbot > /etc/hostname
 
 install -d -o alpine -g alpine -m 0755 /home/alpine
 cat > /home/alpine/.xinitrc <<'EOF'
-firefox &
 exec openbox-session
 EOF
 chown alpine:alpine /home/alpine/.xinitrc
+
+# launch wrapper: detach GUI apps from the ssh session
+cat > /usr/bin/launch <<'EOF'
+#!/bin/sh
+nohup "$@" >/dev/null 2>&1 &
+EOF
+chmod +x /usr/bin/launch
+
+# ssh sessions get the GUI display
+echo 'SetEnv DISPLAY=:0' >> /etc/ssh/sshd_config
+
+# autologin + startx on tty1
+cat > /bin/autologin <<'EOF'
+#!/bin/sh
+exec /bin/login -f alpine
+EOF
+chmod +x /bin/autologin
+sed -i 's|^tty1::.*|tty1::respawn:/sbin/getty -n -l /bin/autologin 38400 tty1|' /etc/inittab
+echo '[ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && exec startx' >> /home/alpine/.profile
 
 # console hint
 echo 'Type: startx' > /etc/motd

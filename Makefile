@@ -31,7 +31,8 @@ boot: openbot.qcow2
 		-nic user,model=virtio-net-pci,hostfwd=tcp::2222-:22 \
 		-device virtio-vga \
 		-display gtk \
-		-device virtio-tablet-pci
+		-device virtio-tablet-pci \
+		-qmp unix:/tmp/openbot-qmp.sock,server,nowait
 
 clean:
 	rm -f openbot.qcow2 openbot_key openbot_key.pub

@@ -1,10 +1,13 @@
+import base64
+import io
 import json
+import os
 import socket
 import subprocess
 import sys
 import time
-
 import litelm
+from PIL import Image
 
 QEMU_CMD = [
     'qemu-system-x86_64',
@@ -14,9 +17,10 @@ QEMU_CMD = [
     '-m', '3G',
     '-drive', 'file=openbot.qcow2,if=virtio,cache=writeback',
     '-nic', 'user,model=virtio-net-pci,hostfwd=tcp::2222-:22',
-    '-device', 'virtio-vga',
+    '-device', 'qxl-vga',
     '-display', 'gtk',
     '-device', 'virtio-tablet-pci',
+    '-qmp', 'unix:/tmp/openbot-qmp.sock,server,nowait',
 ]
 
 qemu_proc = None
@@ -35,6 +39,19 @@ def wait_for_ssh(timeout=120):
         time.sleep(2)
     return False
 
+def wait_for_gui(timeout=180):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if qemu_proc.poll() is not None:
+            return False
+        proc = subprocess.run(
+            SSH_CMD + ['test -S /tmp/.X11-unix/X0 && pgrep -x openbox'],
+            capture_output=True, timeout=10)
+        if proc.returncode == 0:
+            return True
+        time.sleep(3)
+    return False
+
 def start_vm():
     global qemu_proc
     if qemu_proc and qemu_proc.poll() is None:
@@ -50,19 +67,31 @@ def start_vm():
             qemu_proc = None
             return 'VM failed to start:\n' + open('qemu.log').read()
         return 'VM did not finish booting within 120s (still running).'
-    return 'VM started (boot complete).'
+    if not wait_for_gui():
+        if qemu_proc.poll() is not None:
+            qemu_proc = None
+            return 'VM failed to start:\n' + open('qemu.log').read()
+        return 'VM booted, but GUI is not up yet (still running; check the GTK window).'
+    return 'VM started (GUI up).'
 
 def stop_vm():
     global qemu_proc
     if not qemu_proc or qemu_proc.poll() is not None:
         qemu_proc = None
         return 'VM not running.'
-    qemu_proc.terminate()
     try:
-        qemu_proc.wait(timeout=10)
+        subprocess.run(SSH_CMD + ['sudo poweroff'], capture_output=True, text=True, timeout=10)
+    except Exception:
+        pass
+    try:
+        qemu_proc.wait(timeout=15)
     except subprocess.TimeoutExpired:
-        qemu_proc.kill()
-        qemu_proc.wait()
+        qemu_proc.terminate()
+        try:
+            qemu_proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            qemu_proc.kill()
+            qemu_proc.wait()
     return 'VM stopped.'
 
 SSH_CMD = [
@@ -73,6 +102,39 @@ SSH_CMD = [
     '-o', 'LogLevel=ERROR',
     'alpine@127.0.0.1',
 ]
+
+QMP_SOCK = '/tmp/openbot-qmp.sock'
+
+def qmp_screendump():
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(QMP_SOCK)
+    f = s.makefile('rw')
+    def reply():
+        while True:
+            msg = json.loads(f.readline())
+            if 'event' not in msg:
+                return msg
+    json.loads(f.readline())
+    f.write('{"execute":"qmp_capabilities"}\n'); f.flush()
+    reply()
+    f.write('{"execute":"screendump","arguments":{"filename":"screen.ppm"}}\n'); f.flush()
+    result = reply()
+    f.close()
+    s.close()
+    if 'error' in result:
+        raise Exception(f"QMP: {result['error'].get('desc')}")
+
+def screenshot():
+    if not qemu_proc or qemu_proc.poll() is not None:
+        raise Exception('VM not running')
+    qmp_screendump()
+    img = Image.open('screen.ppm')
+    if img.width > 1024:
+        img = img.resize((1024, img.height * 1024 // img.width))
+    buf = io.BytesIO()
+    img.save(buf, 'PNG')
+    os.remove('screen.ppm')
+    return f'VM screenshot captured ({img.width}x{img.height}).', base64.b64encode(buf.getvalue()).decode()
 
 def run_command(command):
     try:
@@ -104,17 +166,26 @@ TOOLS = [
             'required': ['command'],
         },
     }},
+    {'type': 'function', 'function': {
+        'name': 'screenshot',
+        'description': 'Capture the VM display and attach it as an image.',
+        'parameters': {'type': 'object', 'properties': {}},
+    }},
 ]
 
 HANDLERS = {
     'start': start_vm,
     'stop': stop_vm,
     'run': run_command,
+    'screenshot': screenshot,
 }
 
-SYSTEM = '''You are OpenBot: agent that has control over the Virtual Machine (VM).
+SYSTEM = '''You are OpenBot: agent that controls a Virtual Machine (VM) with a graphical desktop.
+The VM runs Alpine Linux with an openbox desktop and firefox; commands execute as user "alpine" via ash (busybox shell, not bash) with passwordless sudo available.
 Use the start and stop tools to manage the VM.
-Use the run tool to execute shell commands in the VM.'''
+Use the run tool to execute shell commands in the VM.
+Use the screenshot tool to see the VM display.
+You can browse the web with a graphical browser: run("launch firefox <url>") opens firefox on the desktop; take a screenshot to see the page and interact by running commands. Close apps with: run("pkill firefox").'''
 
 messages = [
     {'role': 'system', 'content': SYSTEM},
@@ -180,6 +251,7 @@ while True:
         })
         for tc in message.tool_calls:
             error = False
+            image_b64 = None
             try:
                 args = json.loads(tc.function.arguments) if tc.function.arguments else {}
             except json.JSONDecodeError as exc:
@@ -194,6 +266,13 @@ while True:
                 except Exception as exc:
                     result = f'Error: {exc}'
                     error = True
+            if isinstance(result, tuple):
+                result, image_b64 = result
             color = DARK_RED if error else DARK_GREEN
             print(f'{color}{result}{RESET}', flush=True)
             messages.append({'role': 'tool', 'tool_call_id': tc.id, 'content': result})
+            if image_b64:
+                messages.append({'role': 'user', 'content': [
+                    {'type': 'image_url', 'image_url': {'url': f'data:image/png;base64,{image_b64}'}},
+                    {'type': 'text', 'text': 'VM screenshot (attached).'},
+                ]})

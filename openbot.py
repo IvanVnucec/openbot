@@ -45,7 +45,7 @@ def wait_for_gui(timeout=180):
         if qemu_proc.poll() is not None:
             return False
         proc = subprocess.run(
-            SSH_CMD + ['test -S /tmp/.X11-unix/X0 && pgrep -x openbox'],
+            SSH_CMD + ['test -S /tmp/.X11-unix/X0 && pgrep -x xfwm4'],
             capture_output=True, timeout=10)
         if proc.returncode == 0:
             return True
@@ -181,7 +181,7 @@ HANDLERS = {
 }
 
 SYSTEM = '''You are OpenBot: agent that controls a Virtual Machine (VM) with a graphical desktop.
-The VM runs Alpine Linux with an openbox desktop and firefox; commands execute as user "alpine" via ash (busybox shell, not bash) with passwordless sudo available.
+The VM runs Alpine Linux with an XFCE desktop (taskbar, file manager) and firefox; commands execute as user "alpine" via ash (busybox shell, not bash) with passwordless sudo available.
 Use the start and stop tools to manage the VM.
 Use the run tool to execute shell commands in the VM.
 Use the screenshot tool to see the VM display.

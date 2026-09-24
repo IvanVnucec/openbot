@@ -2,7 +2,7 @@
 set -eu
 
 # community is already enabled by alpine-make-vm-image defaults
-apk add --no-cache sudo openssh openrc xorg-server xf86-video-qxl xf86-video-modesetting xf86-input-libinput mesa-dri-gallium mesa-egl openbox xterm font-dejavu firefox dbus dbus-x11 udev eudev xinit
+apk add --no-cache sudo openssh openrc xorg-server xf86-video-qxl xf86-video-modesetting xf86-input-libinput mesa-dri-gallium mesa-egl xfce4 xterm font-dejavu firefox dbus dbus-x11 udev eudev xinit
 
 setup-udev || true
 rc-update add udev sysinit
@@ -40,9 +40,11 @@ echo openbot > /etc/hostname
 
 install -d -o alpine -g alpine -m 0755 /home/alpine
 cat > /home/alpine/.xinitrc <<'EOF'
-exec openbox-session
+exec startxfce4
 EOF
 chown alpine:alpine /home/alpine/.xinitrc
+install -d -m 755 -o alpine -g alpine /home/alpine/.config
+install -d -m 700 -o alpine -g alpine /home/alpine/.config/xfce4
 
 # launch wrapper: detach GUI apps from the ssh session
 cat > /usr/bin/launch <<'EOF'
@@ -62,6 +64,3 @@ EOF
 chmod +x /bin/autologin
 sed -i 's|^tty1::.*|tty1::respawn:/sbin/getty -n -l /bin/autologin 38400 tty1|' /etc/inittab
 echo '[ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && exec startx' >> /home/alpine/.profile
-
-# console hint
-echo 'Type: startx' > /etc/motd

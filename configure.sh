@@ -100,4 +100,5 @@ exec /bin/login -f alpine
 EOF
 chmod +x /bin/autologin
 sed -i 's|^tty1::.*|tty1::respawn:/sbin/getty -n -l /bin/autologin 38400 tty1|' /etc/inittab
-echo '[ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && exec startx' >> /home/alpine/.profile
+install -m 600 -o alpine -g alpine /dev/null /home/alpine/.Xauthority
+echo '[ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && export DISPLAY=:0 XAUTHORITY=/home/alpine/.Xauthority && exec xinit /home/alpine/.xinitrc -- :0 vt1 -nolisten tcp' >> /home/alpine/.profile

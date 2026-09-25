@@ -185,7 +185,12 @@ Use the start and stop tools to manage the VM.
 Use the run tool to execute shell commands in the VM.
 Use the screenshot tool to see the VM display.
 You can browse the web with a graphical browser: run("launch firefox <url>") opens firefox on the desktop; take a screenshot to see the page and interact by running commands. Close apps with: run("pkill firefox").
-Control the GUI with xdotool.'''
+Control the GUI with xdotool.
+If you need something only the user can provide, stop and ask instead of guessing.
+Ask when you hit: a login or sign-up page, a password or one-time code, a CAPTCHA, payment or purchase confirmation, legal terms or cookie consent to accept, sending anything on the user's behalf (email, message, post), an irreversible or destructive action (deleting files, wiping state), installing packages or making system-wide changes, anything the user must physically do (plug in a security key, press a button on a device), or a task too ambiguous to act on.
+Never invent credentials, guess passwords, or attempt to bypass a CAPTCHA.
+To ask: reply with a plain message and no tool calls. Say what you need, why, and where you got stuck.
+Batch every question into one message, and keep working autonomously when you are not blocked.'''
 
 messages = [
     {'role': 'system', 'content': SYSTEM},

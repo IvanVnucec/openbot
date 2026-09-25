@@ -2,14 +2,14 @@ all: setup
 
 setup: openbot.qcow2
 
-alpine-virt-3.24.2-x86_64.iso:
-	wget https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/x86_64/alpine-virt-3.24.2-x86_64.iso
-
 openbot_key:
 	ssh-keygen -t ed25519 -f openbot_key -N '' -C openbot
 
-openbot.qcow2: alpine-virt-3.24.2-x86_64.iso openbot_key
-	sudo ./alpine-make-vm-image.sh \
+apk-cache:
+	mkdir -p apk-cache
+
+openbot.qcow2: openbot_key apk-cache
+	sudo env APK_CACHE_DIR=$(CURDIR)/apk-cache APK_OPTS="--no-progress --cache-packages" ./alpine-make-vm-image.sh \
 		--branch v3.24 \
 		--image-format qcow2 \
 		--image-size 12G \

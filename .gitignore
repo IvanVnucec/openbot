@@ -1,4 +1,3 @@
-alpine-virt-3.24.2-x86_64.iso
 openbot.qcow2
 vm.log
 vm.pid
@@ -9,3 +8,4 @@ openbot_key
 screen.ppm
 screen.png
 openbot_key.pub
+apk-cache/

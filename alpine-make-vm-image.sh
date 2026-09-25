@@ -97,6 +97,10 @@
 #   APK_OPTS                              Options to pass into apk on each execution.
 #                                         Default is "--no-progress".
 #
+#   APK_CACHE_DIR                         Path to a host directory to bind as the image's apk
+#                                         cache (/etc/apk/cache), so downloaded packages are
+#                                         reused across runs. Ignored if unset or missing.
+#
 #   APK_TOOLS_URI                         URL of apk-tools binary to download if $APK is not found
 #                                         on the host system. Default is apk.static from
 #                                         https://gitlab.alpinelinux.org/alpine/apk-tools/-/packages.
@@ -597,6 +601,11 @@ fi
 # Use APK cache if available.
 if [ -L /etc/apk/cache ]; then
 	ln -s "$(realpath /etc/apk/cache)" etc/apk/cache
+fi
+
+# Bind a persistent host-side APK cache into the image.
+if [ -n "$APK_CACHE_DIR" ] && [ -d "$APK_CACHE_DIR" ]; then
+	mount_bind "$APK_CACHE_DIR" etc/apk/cache
 fi
 
 _apk add --root . ${ARCH:+--arch "$ARCH"} --update-cache --initdb alpine-base

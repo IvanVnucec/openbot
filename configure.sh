@@ -2,7 +2,7 @@
 set -eu
 
 # community is already enabled by alpine-make-vm-image defaults
-apk add --no-cache sudo python3 openssh openrc xorg-server xf86-video-modesetting xf86-input-libinput mesa-dri-gallium mesa-egl xfce4 xterm xdotool font-dejavu firefox dbus dbus-x11 udev eudev xinit
+apk add --cache-packages sudo python3 openssh openrc xorg-server xf86-video-modesetting xf86-input-libinput mesa-dri-gallium mesa-egl xfce4 xterm xdotool font-dejavu firefox dbus dbus-x11 udev eudev xinit
 
 # fixed 1024x768 display; GTK window resizes don't affect the framebuffer
 install -d /etc/X11/xorg.conf.d

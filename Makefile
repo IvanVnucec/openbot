@@ -19,7 +19,7 @@ openbot.qcow2: openbot_key apk-cache
 		--script-chroot \
 		openbot.qcow2 \
 		./configure_vm.sh
-	sudo chown ivan openbot.qcow2
+	sudo chown $(USER) openbot.qcow2
 
 boot: openbot.qcow2
 	qemu-system-x86_64 \

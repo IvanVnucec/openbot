@@ -37,7 +37,19 @@ cat > /usr/lib/firefox/distribution/policies.json <<'EOF'
         "installation_mode": "force_installed",
         "install_url": "file:///usr/lib/firefox/distribution/uBOLiteRedux.xpi"
       }
-    }
+    },
+    "TranslateEnabled": false,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "NewTabPage": false,
+    "Homepage": {"URL": "about:blank", "Locked": true, "StartPage": "none"},
+    "SearchSuggestEnabled": false,
+    "NoDefaultBookmarks": true,
+    "DontCheckDefaultBrowser": true,
+    "DisableProfileImport": true,
+    "DisableFirefoxAccounts": true,
+    "OfferToSaveLoginsDefault": false,
+    "DisableFirefoxStudies": true
   }
 }
 EOF

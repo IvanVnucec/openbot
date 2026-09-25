@@ -4,6 +4,8 @@ An AI agent that drives a real graphical desktop inside a virtual machine.
 
 OpenBot boots an Alpine Linux Virtual Machine (VM) under QEMU/KVM, hands the model tools and lets it operate the desktop the way a human would.
 
+![OpenBot Hero](./docs/hero.png)
+
 ## Requirements
 
 Host (Linux):

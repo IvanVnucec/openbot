@@ -18,6 +18,7 @@ Host (Linux):
 ## Quick start
 
 ```sh
+export OPENROUTER_API_KEY='sk-or-...'
 make setup               # build VM image
 python3 openbot.py       # interactive prompt
 ```

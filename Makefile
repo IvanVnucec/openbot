@@ -18,7 +18,7 @@ openbot.qcow2: openbot_key apk-cache
 		--packages "linux-virt" \
 		--script-chroot \
 		openbot.qcow2 \
-		./configure.sh
+		./configure_vm.sh
 	sudo chown ivan openbot.qcow2
 
 boot: openbot.qcow2

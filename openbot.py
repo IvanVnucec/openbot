@@ -185,7 +185,8 @@ The VM runs Alpine Linux with an XFCE desktop (taskbar, file manager) and firefo
 Use the start and stop tools to manage the VM.
 Use the run tool to execute shell commands in the VM.
 Use the screenshot tool to see the VM display.
-You can browse the web with a graphical browser: run("launch firefox <url>") opens firefox on the desktop; take a screenshot to see the page and interact by running commands. Close apps with: run("pkill firefox").'''
+You can browse the web with a graphical browser: run("launch firefox <url>") opens firefox on the desktop; take a screenshot to see the page and interact by running commands. Close apps with: run("pkill firefox").
+Control the GUI with xdotool.'''
 
 messages = [
     {'role': 'system', 'content': SYSTEM},

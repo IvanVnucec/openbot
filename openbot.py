@@ -1,10 +1,10 @@
+import argparse
 import base64
 import io
 import json
 import os
 import socket
 import subprocess
-import sys
 import time
 import litelm
 from PIL import Image
@@ -203,7 +203,20 @@ DARK_RED = '\033[2m\033[31m'
 GRAY = '\033[90m'
 RESET = '\033[0m'
 
-pending = ' '.join(sys.argv[1:]).strip() or None
+parser = argparse.ArgumentParser(
+    prog='openbot.py',
+    description='AI agent controlling a virtual machine that does jobs for you.',
+)
+parser.add_argument(
+    'model',
+    help='model as provider/model, e.g. openai/gpt-5 or openrouter/glm-5.3-flash. '
+         'The provider prefix selects which API key env var is read.',
+)
+parser.add_argument('--prompt', nargs='?', help='task to run; omit for interactive mode')
+args = parser.parse_args()
+
+model = args.model
+pending = (args.prompt or '').strip() or None
 
 while True:
     content = pending or input('>>> ').strip()
@@ -213,7 +226,7 @@ while True:
     messages.append({'role': 'user', 'content': content})
     while True:
         stream = litelm.completion(
-            'openrouter/glm-5.3-flash',
+            model,
             messages=messages,
             tools=TOOLS,
             stream=True,

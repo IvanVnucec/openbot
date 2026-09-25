@@ -19,16 +19,19 @@ Host (Linux):
 
 ## Quick start
 
+`model` argument is required and takes `provider/model` format. The provider prefix selects which API key it reads, so export it first:
+
 ```sh
 export OPENROUTER_API_KEY='sk-or-...'
-make setup               # build VM image
-python3 openbot.py       # interactive prompt
+make setup                                   # build VM image
+python3 openbot.py openrouter/glm-5.3-flash  # interactive prompt
 ```
 
 Or give it a task directly:
 
 ```sh
-python3 openbot.py "open wikipedia and tell me what is on the frontpage"
+export OPENAI_API_KEY='sk-or-...'
+python3 openbot.py openai/gpt-5 --prompt "open wikipedia and tell me what is on the frontpage"
 ```
 
 ## The VM

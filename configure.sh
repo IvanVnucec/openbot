@@ -20,7 +20,28 @@ Section "Screen"
 EndSection
 EOF
 
-setup-udev || true
+# ad blocker: uBlock Origin Lite (MV3; full uBO is MV2 and won't load in Firefox 151)
+install -d /usr/lib/firefox/distribution
+wget -O /usr/lib/firefox/distribution/uBOLiteRedux.xpi \
+	https://addons.mozilla.org/firefox/downloads/file/5044373/ublock_origin_lite-2026.920.1710.xpi
+xpi_sum=$(sha256sum /usr/lib/firefox/distribution/uBOLiteRedux.xpi)
+[ "${xpi_sum%% *}" = 'e963ebbefd12ae36d891393ff61940b8d94b605c2a8510d3749afff176d7ad7a' ] || {
+	echo 'uBO Lite xpi sha256 mismatch' >&2
+	exit 1
+}
+cat > /usr/lib/firefox/distribution/policies.json <<'EOF'
+{
+  "policies": {
+    "ExtensionSettings": {
+      "uBOLiteRedux@raymondhill.net": {
+        "installation_mode": "force_installed",
+        "install_url": "file:///usr/lib/firefox/distribution/uBOLiteRedux.xpi"
+      }
+    }
+  }
+}
+EOF
+
 rc-update add udev sysinit
 rc-update add udev-trigger sysinit
 rc-update add udev-settle sysinit

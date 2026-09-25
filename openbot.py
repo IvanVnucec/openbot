@@ -17,7 +17,7 @@ QEMU_CMD = [
     '-m', '3G',
     '-drive', 'file=openbot.qcow2,if=virtio,cache=writeback',
     '-nic', 'user,model=virtio-net-pci,hostfwd=tcp::2222-:22',
-    '-device', 'qxl-vga',
+    '-device', 'virtio-vga',
     '-display', 'gtk',
     '-device', 'virtio-tablet-pci',
     '-qmp', 'unix:/tmp/openbot-qmp.sock,server,nowait',
@@ -129,8 +129,6 @@ def screenshot():
         raise Exception('VM not running')
     qmp_screendump()
     img = Image.open('screen.ppm')
-    if img.width > 1024:
-        img = img.resize((1024, img.height * 1024 // img.width))
     buf = io.BytesIO()
     img.save(buf, 'PNG')
     os.remove('screen.ppm')
@@ -182,6 +180,7 @@ HANDLERS = {
 
 SYSTEM = '''You are OpenBot: agent that controls a Virtual Machine (VM) with a graphical desktop.
 The VM runs Alpine Linux with an XFCE desktop (taskbar, file manager) and firefox; commands execute as user "alpine" via ash (busybox shell, not bash) with passwordless sudo available.
+The display is fixed at 1024x768 and never changes; screenshot pixel coordinates map exactly to xdotool coordinates.
 Use the start and stop tools to manage the VM.
 Use the run tool to execute shell commands in the VM.
 Use the screenshot tool to see the VM display.
@@ -207,7 +206,7 @@ while True:
     if not content:
         continue
     messages.append({'role': 'user', 'content': content})
-    for _ in range(10):
+    while True:
         stream = litelm.completion(
             'openrouter/glm-5.3-flash',
             messages=messages,

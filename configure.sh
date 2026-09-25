@@ -94,6 +94,11 @@ EOF
 chown alpine:alpine /home/alpine/.xinitrc
 install -d -m 755 -o alpine -g alpine /home/alpine/.config
 install -d -m 700 -o alpine -g alpine /home/alpine/.config/xfce4
+cat > /home/alpine/.config/xfce4/helpers.rc <<'EOF'
+TerminalEmulator=xterm
+TerminalEmulatorDismissed=true
+EOF
+chown alpine:alpine /home/alpine/.config/xfce4/helpers.rc
 
 # launch wrapper: detach GUI apps from the ssh session
 cat > /usr/bin/launch <<'EOF'
